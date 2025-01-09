@@ -2,9 +2,11 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import axios from "axios";
 import useDebounce from "../Hooks/useDebounce";
 import {
+  CATEGORIES,
   FILTER_INIT,
   FULFILLED,
   GUARDIAN_API_KEY,
+  MEDIA_STACK,
   NEW_YORK_TIMES,
   NEWS_DATA_IO,
   NEWSDATA_IO,
@@ -27,7 +29,7 @@ const NewsAggregator = () => {
           `https://newsdata.io/api/1/latest?apikey=${NEWSDATA_IO}&q=${debouncedKeyword}`
         ),
         axios.get(
-          `https://content.guardianapis.com/search?q=${debouncedKeyword}&api-key=${GUARDIAN_API_KEY}`
+          `https://api.mediastack.com/v1/news?access_key=${MEDIA_STACK}&keywords=${debouncedKeyword}`
         ),
         axios.get(
           `https://api.worldnewsapi.com/search-news?text=${debouncedKeyword}&language=en`,
@@ -46,7 +48,7 @@ const NewsAggregator = () => {
         responses[1].status === FULFILLED
           ? returnAggregatedNewsData(
               THE_GUARDIAN,
-              responses[1].value.data.response.results
+              responses[1].value.data?.data
             )
           : [];
       const nytArticles =
@@ -75,7 +77,8 @@ const NewsAggregator = () => {
     return articles.filter((article) => {
       return (
         (!filters.source || article.source === filters.source) &&
-        (!filters.date || article.publishedAt.startsWith(filters.date))
+        (!filters.date || article.publishedAt.startsWith(filters.date)) &&
+        (!filters.category || article.category.includes(filters.category))
       );
     });
   }, [articles, filters]);
@@ -122,7 +125,19 @@ const NewsAggregator = () => {
             }
           })
         }}>Reset date</button>
-        
+         <select
+          value={filters.category}
+          onChange={(e) =>
+            setFilters((prev) => ({ ...prev, category: e.target.value }))
+          }
+        >
+          <option value="">All Categories</option>
+          {CATEGORIES.map((category) => (
+            <option key={category} value={category}>
+              {category.charAt(0).toUpperCase() + category.slice(1)}
+            </option>
+          ))}
+        </select>
         <button onClick={(e) => {
           setFilters(FILTER_INIT)
         }}>Reset all</button> 
