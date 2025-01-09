@@ -1,25 +1,29 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import axios from "axios";
 import useDebounce from "../Hooks/useDebounce";
+
 import {
   CATEGORIES,
   FILTER_INIT,
   FULFILLED,
-  GUARDIAN_API_KEY,
+  NEWSDATA_IO,
   MEDIA_STACK,
   NEW_YORK_TIMES,
-  NEWS_DATA_IO,
-  NEWSDATA_IO,
   THE_GUARDIAN,
   WORLD_NEWS_API,
+  NEWS_DATA_IO,
 } from "../Utils/constants";
 import { returnAggregatedNewsData } from "../Utils/helpers";
+import { useFavoritesStore } from "../Hooks/useFavoritesStore";
 
 const NewsAggregator = () => {
   const [articles, setArticles] = useState([]);
   const [keyword, setKeyword] = useState("");
   const [filters, setFilters] = useState(FILTER_INIT);
   const debouncedKeyword = useDebounce(keyword, 1000);
+
+  // Zustand hooks
+  const { starredAuthors, addAuthor, removeAuthor } = useFavoritesStore(s => s);
 
   // Fetch articles from the APIs
   const fetchArticles = useCallback(async () => {
@@ -117,15 +121,19 @@ const NewsAggregator = () => {
             setFilters((prev) => ({ ...prev, date: e.target.value }))
           }
         />
-        <button onClick={(e)=> {
-          setFilters((preVal) => {
-            return {
-              ...preVal,
-              date: ""
-            }
-          })
-        }}>Reset date</button>
-         <select
+        <button
+          onClick={(e) => {
+            setFilters((preVal) => {
+              return {
+                ...preVal,
+                date: "",
+              };
+            });
+          }}
+        >
+          Reset date
+        </button>
+        <select
           value={filters.category}
           onChange={(e) =>
             setFilters((prev) => ({ ...prev, category: e.target.value }))
@@ -138,22 +146,43 @@ const NewsAggregator = () => {
             </option>
           ))}
         </select>
-        <button onClick={(e) => {
-          setFilters(FILTER_INIT)
-        }}>Reset all</button> 
+        <button
+          onClick={(e) => {
+            setFilters(FILTER_INIT);
+          }}
+        >
+          Reset all
+        </button>
       </div>
 
       {/* Articles List */}
       <ul>
         {filteredArticles.map((article, index) => {
+          const isAuthorStarred = starredAuthors.includes(article.authors[0]);
           return (
             <li key={index}>
               <a href={article.url} target="_blank" rel="noopener noreferrer">
                 {article.title}
               </a>{" "}
-              - <em>{article.source}</em>
+              - <em>{article.source}</em> -{" "}
+              <em>
+                {article.authors.map((author) => (
+                  <span key={author}>
+                    {author}{" "}
+                    <button
+                      onClick={() =>
+                        isAuthorStarred
+                          ? removeAuthor(author)
+                          : addAuthor(author)
+                      }
+                    >
+                      {isAuthorStarred ? "Unstar" : "Star"}
+                    </button>
+                  </span>
+                ))}
+              </em>
             </li>
-          )
+          );
         })}
       </ul>
     </div>
