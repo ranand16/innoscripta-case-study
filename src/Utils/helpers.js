@@ -27,6 +27,7 @@ export const returnAggregatedNewsData = (source, data) => {
                 category: article.category || "General",
             }));
         default: 
+            return []
             // need to add some default code later
     }
 }

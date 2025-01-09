@@ -9,13 +9,18 @@
   const THE_GUARDIAN = "The Guardian";
   const NEW_YORK_TIMES = "New York Times";
 
+  const FULFILLED = "fulfilled"
+  const FILTER_INIT = { source: "", date: "" };
+
   export { 
     NEWSDATA_IO,
     GUARDIAN_API_KEY,
     WORLD_NEWS_API,
     NEWS_DATA_IO,
     THE_GUARDIAN,
-    NEW_YORK_TIMES
+    NEW_YORK_TIMES,
+    FULFILLED,
+    FILTER_INIT
     // NEWS_API_KEY, 
     // NYT_API_KEY,
    }
