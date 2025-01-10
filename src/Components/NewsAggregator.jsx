@@ -1,84 +1,21 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
-import axios from "axios";
+import React, { useState, useMemo } from "react";
 import useDebounce from "../Hooks/useDebounce";
-
-import {
-  CATEGORIES,
-  FILTER_INIT,
-  FULFILLED,
-  NEWSDATA_IO,
-  MEDIA_STACK,
-  NEW_YORK_TIMES,
-  THE_GUARDIAN,
-  WORLD_NEWS_API,
-  NEWS_DATA_IO,
-} from "../Utils/constants";
-import { returnAggregatedNewsData } from "../Utils/helpers";
+import useFetchArticles from "../Hooks/useFetchArticles";
+import { FILTER_INIT, CATEGORIES, NEWS_DATA_IO, THE_GUARDIAN, NEW_YORK_TIMES } from "../Utils/constants";
 import { useFavoritesStore } from "../Hooks/useFavoritesStore";
 
 const NewsAggregator = () => {
-  const [articles, setArticles] = useState([]);
   const [keyword, setKeyword] = useState("");
   const [filters, setFilters] = useState(FILTER_INIT);
   const debouncedKeyword = useDebounce(keyword, 1000);
 
-  // Zustand hooks
-  const { starredAuthors, addAuthor, removeAuthor } = useFavoritesStore(s => s);
+  const { articles, loading, error } = useFetchArticles(debouncedKeyword);
 
-  // Fetch articles from the APIs
-  const fetchArticles = useCallback(async () => {
-    try {
-      const responses = await Promise.allSettled([
-        axios.get(
-          `https://newsdata.io/api/1/latest?apikey=${NEWSDATA_IO}&q=${debouncedKeyword}`
-        ),
-        axios.get(
-          `https://api.mediastack.com/v1/news?access_key=${MEDIA_STACK}&keywords=${debouncedKeyword}`
-        ),
-        axios.get(
-          `https://api.worldnewsapi.com/search-news?text=${debouncedKeyword}&language=en`,
-          { headers: { "x-api-key": WORLD_NEWS_API } }
-        ),
-      ]);
-
-      const newsDataIoArticles =
-        responses[0].status === FULFILLED
-          ? returnAggregatedNewsData(
-              NEWS_DATA_IO,
-              responses[0].value.data?.results
-            )
-          : [];
-      const guardianArticles =
-        responses[1].status === FULFILLED
-          ? returnAggregatedNewsData(
-              THE_GUARDIAN,
-              responses[1].value.data?.data
-            )
-          : [];
-      const nytArticles =
-        responses[2].status === FULFILLED
-          ? returnAggregatedNewsData(
-              NEW_YORK_TIMES,
-              responses[2].value.data?.news
-            )
-          : [];
-
-      setArticles([...newsDataIoArticles, ...guardianArticles, ...nytArticles]);
-    } catch (error) {
-      console.error("Error fetching articles:", error);
-    }
-  }, [debouncedKeyword]);
-
-  // Fetch articles when debouncedKeyword changes
-  useEffect(() => {
-    if (debouncedKeyword) {
-      fetchArticles();
-    }
-  }, [debouncedKeyword, fetchArticles]);
+  const { starredAuthors, addAuthor, removeAuthor, addPreference, preferences } = useFavoritesStore((s) => s);
 
   // Filter articles
   const filteredArticles = useMemo(() => {
-    return articles.filter((article) => {
+    return articles.filter((article, i) => {
       return (
         (!filters.source || article.source === filters.source) &&
         (!filters.date || article.publishedAt.startsWith(filters.date)) &&
@@ -95,9 +32,7 @@ const NewsAggregator = () => {
       <input
         type="text"
         placeholder="Search articles..."
-        onChange={(e) => {
-          setKeyword(e.target.value);
-        }}
+        onChange={(e) => setKeyword(e.target.value)}
       />
 
       {/* Filters */}
@@ -109,9 +44,9 @@ const NewsAggregator = () => {
           }
         >
           <option value="">All Sources</option>
-          <option value={NEWS_DATA_IO}>{NEWS_DATA_IO}</option>
-          <option value={THE_GUARDIAN}>{THE_GUARDIAN}</option>
-          <option value={NEW_YORK_TIMES}>{NEW_YORK_TIMES}</option>
+          <option value={NEWS_DATA_IO}>News Data IO</option>
+          <option value={THE_GUARDIAN}>The Guardian</option>
+          <option value={NEW_YORK_TIMES}>New York Times</option>
         </select>
 
         <input
@@ -122,17 +57,13 @@ const NewsAggregator = () => {
           }
         />
         <button
-          onClick={(e) => {
-            setFilters((preVal) => {
-              return {
-                ...preVal,
-                date: "",
-              };
-            });
-          }}
+          onClick={() =>
+            setFilters((prev) => ({ ...prev, date: "" }))
+          }
         >
           Reset date
         </button>
+
         <select
           value={filters.category}
           onChange={(e) =>
@@ -146,44 +77,47 @@ const NewsAggregator = () => {
             </option>
           ))}
         </select>
-        <button
-          onClick={(e) => {
-            setFilters(FILTER_INIT);
-          }}
-        >
-          Reset all
-        </button>
+        <button onClick={() => setFilters(FILTER_INIT)}>Reset all</button>
       </div>
+
+      {/* Add Preference */}
+      <button
+        onClick={() =>
+          addPreference({
+            source: filters.source,
+            starredAuthors,
+            category: filters.category,
+          })
+        }
+      >
+        Add Preference
+      </button>
+
+      {/* Display Preferences */}
+      <ul>
+        {preferences.map((pref, index) => (
+          <li key={index}>
+            Name: Pref-{index + 1} | Source: {pref.source || "All"} | Category:{" "}
+            {pref.category || "All"} | Starred Authors:{" "}
+            {pref.starredAuthors.join(", ") || "None"}
+          </li>
+        ))}
+      </ul>
+
+      {/* Loading/Error */}
+      {loading && <p>Loading articles...</p>}
+      {error && <p>Error fetching articles: {error.message}</p>}
 
       {/* Articles List */}
       <ul>
-        {filteredArticles.map((article, index) => {
-          const isAuthorStarred = starredAuthors.includes(article.authors[0]);
-          return (
-            <li key={index}>
-              <a href={article.url} target="_blank" rel="noopener noreferrer">
-                {article.title}
-              </a>{" "}
-              - <em>{article.source}</em> -{" "}
-              <em>
-                {article.authors.map((author) => (
-                  <span key={author}>
-                    {author}{" "}
-                    <button
-                      onClick={() =>
-                        isAuthorStarred
-                          ? removeAuthor(author)
-                          : addAuthor(author)
-                      }
-                    >
-                      {isAuthorStarred ? "Unstar" : "Star"}
-                    </button>
-                  </span>
-                ))}
-              </em>
-            </li>
-          );
-        })}
+        {filteredArticles.map((article, index) => (
+          <li key={index}>
+            <a href={article.url} target="_blank" rel="noopener noreferrer">
+              {article.title}
+            </a>{" "}
+            - <em>{article.source}</em>
+          </li>
+        ))}
       </ul>
     </div>
   );
