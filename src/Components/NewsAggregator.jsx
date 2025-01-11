@@ -9,18 +9,18 @@ import {
   NEW_YORK_TIMES,
 } from "../Utils/constants";
 import { useFavoritesStore } from "../Hooks/useFavoritesStore";
+import "../NewAggregator.css"
 
 const NewsAggregator = () => {
-  const [keyword, setKeyword] = useState(""); // the keyword as you enter this is updated
-  const [filters, setFilters] = useState(FILTER_INIT); // all the filters applied right now, default as well 
-  const debouncedKeyword = useDebounce(keyword, 1000); // the keyword with added debounce 
+  const [keyword, setKeyword] = useState("");
+  const [filters, setFilters] = useState(FILTER_INIT);
+  const debouncedKeyword = useDebounce(keyword, 1000);
 
-  const { articles, loading, error } = useFetchArticles(debouncedKeyword); // fetching articels along with loader and error 
+  const { articles, loading, error } = useFetchArticles(debouncedKeyword);
 
   const { addPreference, removeAuthorFromPreference, preferences } =
-    useFavoritesStore((s) => s); // saving preference or feed preference...you can add as many a syou want here
+    useFavoritesStore((s) => s);
 
-  // Filter articles
   const filteredArticles = useMemo(() => {
     return articles.filter((article) => {
       return (
@@ -29,148 +29,167 @@ const NewsAggregator = () => {
         (!filters.category || article.category.includes(filters.category))
       );
     });
-  }, [articles, filters]); // filtering articles and memoizing it to prevent waste re renders 
+  }, [articles, filters]);
 
   return (
-    <div>
-      <h1>News Aggregator</h1>
-
-      {/* Search Input */}
-      <input
-        type="text"
-        placeholder="Search articles..."
-        onChange={(e) => setKeyword(e.target.value)}
-      />
-
-      {/* Filters */}
-      <div>
-        {/* Source Filter */}
-        <select
-          value={filters.source}
-          onChange={(e) =>
-            setFilters((prev) => ({ ...prev, source: e.target.value }))
-          }
-        >
-          <option value="">All Sources</option>
-          <option value={NEWS_DATA_IO}>{NEWS_DATA_IO}</option>
-          <option value={THE_GUARDIAN}>{THE_GUARDIAN}</option>
-          <option value={NEW_YORK_TIMES}>{NEW_YORK_TIMES}</option>
-        </select>
-
-        {/* Date Filter */}
-        <input
-          type="date"
-          value={filters.date}
-          onChange={(e) =>
-            setFilters((prev) => ({ ...prev, date: e.target.value }))
-          }
-        />
-
-        {/* Reset the date only */}
-        <button
-          onClick={() => setFilters((prev) => ({ ...prev, date: "" }))}
-        >
-          Reset date
-        </button>
-
-        {/* Category dilter */}
-        <select
-          value={filters.category}
-          onChange={(e) =>
-            setFilters((prev) => ({ ...prev, category: e.target.value }))
-          }
-        >
-          <option value="">All Categories</option>
-          {CATEGORIES.map((category) => (
-            <option key={category} value={category}>
-              {category.charAt(0).toUpperCase() + category.slice(1)}
-            </option>
+    <div className="news-container">
+      <div className="news-preferences-container">
+        <ul className="news-preferences-list">
+          {preferences.map((pref, index) => (
+            <li key={index} className="news-preference-item">
+              <h3>Preference {index + 1}</h3>
+              <p>
+                <span>Source:</span> {pref.source || "All"}
+              </p>
+              <p>
+                <span>Category:</span> {pref.category || "All"}
+              </p>
+              <p>
+                <span>Starred Authors:</span>{" "}
+                {pref.starredAuthors.join(", ") || "None"}
+              </p>
+            </li>
           ))}
-        </select>
-        <button onClick={() => setFilters(FILTER_INIT)}>Reset all</button>
+        </ul>
+
       </div>
 
-      {/* Add Preference */}
-      {/* This preference is used in the personalized component to create different types of feed for any user */}
-      <button
-        onClick={() =>
-          addPreference({
-            source: filters.source,
-            category: filters.category,
-            starredAuthors: [],
-          })
-        }
-      >
-        Add Preference
-      </button>
+      <div>
+        <h1 className="news-title">News Aggregator</h1>
+        <input
+          type="text"
+          placeholder="Search articles..."
+          className="news-search-input"
+          onChange={(e) => setKeyword(e.target.value)}
+        />
 
-      {/* Display Preferences */}
-      <ul>
-        {preferences.map((pref, index) => (
-          <li key={index}>
-            Name: Pref-{index + 1} | Source: {pref.source || "All"} | Category:{" "}
-            {pref.category || "All"} | Starred Authors:{" "}
-            {pref.starredAuthors.join(", ") || "None"}
-          </li>
-        ))}
-      </ul>
+        <div className="news-filters">
+          <select
+            value={filters.source}
+            className="news-filter-select"
+            onChange={(e) =>
+              setFilters((prev) => ({ ...prev, source: e.target.value }))
+            }
+          >
+            <option value="">All Sources</option>
+            <option value={NEWS_DATA_IO}>{NEWS_DATA_IO}</option>
+            <option value={THE_GUARDIAN}>{THE_GUARDIAN}</option>
+            <option value={NEW_YORK_TIMES}>{NEW_YORK_TIMES}</option>
+          </select>
 
-      {/* Loading/Error */}
-      {loading && <p>Loading articles...</p>}
-      {error && <p>Error fetching articles: {error.message}</p>}
+          <input
+            type="date"
+            value={filters.date}
+            className="news-filter-date"
+            onChange={(e) =>
+              setFilters((prev) => ({ ...prev, date: e.target.value }))
+            }
+          />
+          <button
+            className="news-reset-button"
+            onClick={() => setFilters((prev) => ({ ...prev, date: "" }))}
+          >
+            Reset Date
+          </button>
 
-      {/* Articles List */}
-      <ul>
-        {filteredArticles.map((article, index) => {
-          const activePreference = preferences.find(
-            (pref) =>
-              pref.source === filters.source &&
-              pref.category === filters.category
-          );
+          <select
+            value={filters.category}
+            className="news-filter-select"
+            onChange={(e) =>
+              setFilters((prev) => ({ ...prev, category: e.target.value }))
+            }
+          >
+            <option value="">All Categories</option>
+            {CATEGORIES.map((category) => (
+              <option key={category} value={category}>
+                {category.charAt(0).toUpperCase() + category.slice(1)}
+              </option>
+            ))}
+          </select>
+          <button
+            className="news-reset-button"
+            onClick={() => setFilters(FILTER_INIT)}
+          >
+            Reset All
+          </button>
+        </div>
 
-          // checking if the active preference has this author 
-          const isAuthorStarred =
-            activePreference?.starredAuthors.includes(article.authors[0]);
+        <button
+          className="news-add-preference-button"
+          onClick={() =>
+            addPreference({
+              source: filters.source,
+              category: filters.category,
+              starredAuthors: [],
+            })
+          }
+        >
+          Add Preference
+        </button>
 
-          return (
-            <li key={index}>
-              <a href={article.url} target="_blank" rel="noopener noreferrer">
-                {article.title}
-              </a>{" "}
-              - <em>{article.source}</em> -{" "}
-              <em>
-                {article.authors.map((author, i) => (
-                  <span key={i}>
-                    {author}{" "}
-                    <button
-                      onClick={() => {
-                        if (isAuthorStarred) {
-                          removeAuthorFromPreference(
-                            author,
-                            filters.source,
-                            filters.category
-                          );
-                        } else {
-                          addPreference({
-                            source: filters.source,
-                            category: filters.category,
-                            starredAuthors: [
-                              ...(activePreference?.starredAuthors || []),
+
+        {loading && <p className="news-loading-text">Loading articles...</p>}
+        {error && (
+          <p className="news-error-text">Error fetching articles: {error.message}</p>
+        )}
+
+        <ul className="news-articles-list">
+          {filteredArticles.map((article, index) => {
+            const activePreference = preferences.find(
+              (pref) =>
+                pref.source === filters.source &&
+                pref.category === filters.category
+            );
+
+            const isAuthorStarred =
+              activePreference?.starredAuthors.includes(article.authors[0]);
+
+            return (
+              <li key={index} className="news-article-item">
+                <a
+                  href={article.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="news-article-link"
+                >
+                  {article.title}
+                </a>{" "}
+                - <em>{article.source}</em> -{" "}
+                <em>
+                  {article.authors.map((author, i) => (
+                    <span key={i}>
+                      {author}{" "}
+                      <button
+                        className="news-star-button"
+                        onClick={() => {
+                          if (isAuthorStarred) {
+                            removeAuthorFromPreference(
                               author,
-                            ],
-                          });
-                        }
-                      }}
-                    >
-                      {isAuthorStarred ? "Unstar" : "Star"}
-                    </button>
-                  </span>
-                ))}
-              </em>
-            </li>
-          );
-        })}
-      </ul>
+                              filters.source,
+                              filters.category
+                            );
+                          } else {
+                            addPreference({
+                              source: filters.source,
+                              category: filters.category,
+                              starredAuthors: [
+                                ...(activePreference?.starredAuthors || []),
+                                author,
+                              ],
+                            });
+                          }
+                        }}
+                      >
+                        {isAuthorStarred ? "Unstar" : "Star"}
+                      </button>
+                    </span>
+                  ))}
+                </em>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
     </div>
   );
 };
