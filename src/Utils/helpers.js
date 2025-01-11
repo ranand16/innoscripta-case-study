@@ -1,5 +1,11 @@
 import { NEW_YORK_TIMES, NEWS_DATA_IO, THE_GUARDIAN } from "./constants";
 
+/**
+ * 
+ * @param {*} source SOurce could be any of three sources
+ * @param {*} data - array of results we got from the api 
+ * @returns array of results with normalized data for a specific source 
+ */
 export const returnAggregatedNewsData = (source, data) => {
   const uniqueArticles = new Map(); // To store unique articles by title
 
@@ -55,4 +61,5 @@ export const returnAggregatedNewsData = (source, data) => {
 };
 
 
+// Function to check intersection of two stringed arrays
 export const hasIntersection = (arr1, arr2) => arr1.some((item) => arr2.includes(item));

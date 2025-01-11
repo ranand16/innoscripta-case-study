@@ -6,6 +6,11 @@ export const useFavoritesStore = create(
     (set) => ({
       preferences: [],
 
+      /**
+       * 
+       * @param {*} newPreference - new preference added from the NewsAggregator cokponent 
+       * @returns 
+       */
       addPreference: (newPreference) =>
         set((state) => {
           const existingPreferenceIndex = state.preferences.findIndex(
@@ -40,6 +45,13 @@ export const useFavoritesStore = create(
           };
         }),
 
+        /**
+         * 
+         * @param {*} author 
+         * @param {*} source 
+         * @param {*} category 
+         * @returns 
+         */
       removeAuthorFromPreference: (author, source, category) =>
         set((state) => {
           const updatedPreferences = state.preferences.map((pref) => {
