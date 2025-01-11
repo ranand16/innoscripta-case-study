@@ -1,36 +1,70 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
-export const useFavoritesStore = create((set) => ({
-  starredAuthors: [],
-  preferences: [],
+export const useFavoritesStore = create(
+  persist(
+    (set) => ({
+      preferences: [],
 
-  addAuthor: (author) =>
-    set((state) => ({
-      starredAuthors: [...new Set([...state.starredAuthors, author])],
-    })),
-  
-  removeAuthor: (author) =>
-    set((state) => ({
-      starredAuthors: state.starredAuthors.filter((a) => a !== author),
-    })),
-  
-  addPreference: (newPreference) =>
-    set((state) => {
-      const isDuplicate = state.preferences.some(
-        (pref) =>
-          pref.source === newPreference.source &&
-          JSON.stringify(pref.starredAuthors.sort()) ===
-            JSON.stringify(newPreference.starredAuthors.sort()) &&
-          pref.category === newPreference.category
-      );
-      if (isDuplicate) {
-        console.warn("Duplicate preference detected. Preference not added.");
-        return state; // Return state without changes
-      }
-      return {
-        preferences: [...state.preferences, newPreference],
-      };
+      addPreference: (newPreference) =>
+        set((state) => {
+          const existingPreferenceIndex = state.preferences.findIndex(
+            (pref) =>
+              pref.source === newPreference.source &&
+              pref.category === newPreference.category
+          );
+
+          if (existingPreferenceIndex !== -1) {
+            // Merge the starred authors if a preference with the same source and category exists
+            const updatedPreferences = [...state.preferences];
+            const existingPreference = updatedPreferences[existingPreferenceIndex];
+            updatedPreferences[existingPreferenceIndex] = {
+              ...existingPreference,
+              starredAuthors: [
+                ...new Set([
+                  ...existingPreference.starredAuthors,
+                  ...(newPreference.starredAuthors || []),
+                ]),
+              ],
+            };
+
+            return { preferences: updatedPreferences };
+          }
+
+          // Add new preference if no duplicate exists
+          return {
+            preferences: [
+              ...state.preferences,
+              { ...newPreference, starredAuthors: [...(newPreference.starredAuthors || [])] },
+            ],
+          };
+        }),
+
+      removeAuthorFromPreference: (author, source, category) =>
+        set((state) => {
+          const updatedPreferences = state.preferences.map((pref) => {
+            if (pref.source === source && pref.category === category) {
+              return {
+                ...pref,
+                starredAuthors: pref.starredAuthors.filter((a) => a !== author),
+              };
+            }
+            return pref;
+          });
+
+          return { preferences: updatedPreferences };
+        }),
+
+      isStarred: (author, source, category) => (state) => {
+        const preference = state.preferences.find(
+          (pref) => pref.source === source && pref.category === category
+        );
+        return preference?.starredAuthors.includes(author) || false;
+      },
     }),
-  
-  isStarred: (author) => (state) => state.starredAuthors.includes(author),
-}));
+    {
+      name: "favorites-store", // Key for localStorage
+      partialize: (state) => ({ preferences: state.preferences }), // Persist only preferences
+    }
+  )
+);

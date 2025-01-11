@@ -12,7 +12,11 @@ import {
 import { returnAggregatedNewsData } from "../Utils/helpers";
 
 const useFetchArticles = (debouncedKeyword) => {
-  const [articles, setArticles] = useState([]);
+  const [articles, setArticles] = useState(() => {
+    // Load articles from localStorage on initial render
+    const storedArticles = localStorage.getItem("articles");
+    return storedArticles ? JSON.parse(storedArticles) : [];
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -58,7 +62,15 @@ const useFetchArticles = (debouncedKeyword) => {
             )
           : [];
 
-      setArticles([...newsDataIoArticles, ...guardianArticles, ...nytArticles]);
+      const aggregatedArticles = [
+        ...newsDataIoArticles,
+        ...guardianArticles,
+        ...nytArticles,
+      ];
+
+      // Update state and save articles to localStorage
+      setArticles(aggregatedArticles);
+      localStorage.setItem("articles", JSON.stringify(aggregatedArticles));
     } catch (fetchError) {
       console.error("Error fetching articles:", fetchError);
       setError(fetchError);
@@ -71,7 +83,7 @@ const useFetchArticles = (debouncedKeyword) => {
     fetchArticles();
   }, [fetchArticles]);
 
-  return { articles, loading, error };
+  return { articles, loading, error, fetchArticles };
 };
 
 export default useFetchArticles;

@@ -53,3 +53,6 @@ export const returnAggregatedNewsData = (source, data) => {
 
   return Array.from(uniqueArticles.values());
 };
+
+
+export const hasIntersection = (arr1, arr2) => arr1.some((item) => arr2.includes(item));

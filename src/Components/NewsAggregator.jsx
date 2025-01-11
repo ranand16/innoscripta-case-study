@@ -1,7 +1,13 @@
 import React, { useState, useMemo } from "react";
 import useDebounce from "../Hooks/useDebounce";
 import useFetchArticles from "../Hooks/useFetchArticles";
-import { FILTER_INIT, CATEGORIES, NEWS_DATA_IO, THE_GUARDIAN, NEW_YORK_TIMES } from "../Utils/constants";
+import {
+  FILTER_INIT,
+  CATEGORIES,
+  NEWS_DATA_IO,
+  THE_GUARDIAN,
+  NEW_YORK_TIMES,
+} from "../Utils/constants";
 import { useFavoritesStore } from "../Hooks/useFavoritesStore";
 
 const NewsAggregator = () => {
@@ -11,11 +17,12 @@ const NewsAggregator = () => {
 
   const { articles, loading, error } = useFetchArticles(debouncedKeyword);
 
-  const { starredAuthors, addAuthor, removeAuthor, addPreference, preferences } = useFavoritesStore((s) => s);
+  const { addPreference, removeAuthorFromPreference, preferences } =
+    useFavoritesStore((s) => s);
 
   // Filter articles
   const filteredArticles = useMemo(() => {
-    return articles.filter((article, i) => {
+    return articles.filter((article) => {
       return (
         (!filters.source || article.source === filters.source) &&
         (!filters.date || article.publishedAt.startsWith(filters.date)) &&
@@ -44,9 +51,9 @@ const NewsAggregator = () => {
           }
         >
           <option value="">All Sources</option>
-          <option value={NEWS_DATA_IO}>News Data IO</option>
-          <option value={THE_GUARDIAN}>The Guardian</option>
-          <option value={NEW_YORK_TIMES}>New York Times</option>
+          <option value={NEWS_DATA_IO}>{NEWS_DATA_IO}</option>
+          <option value={THE_GUARDIAN}>{THE_GUARDIAN}</option>
+          <option value={NEW_YORK_TIMES}>{NEW_YORK_TIMES}</option>
         </select>
 
         <input
@@ -57,9 +64,7 @@ const NewsAggregator = () => {
           }
         />
         <button
-          onClick={() =>
-            setFilters((prev) => ({ ...prev, date: "" }))
-          }
+          onClick={() => setFilters((prev) => ({ ...prev, date: "" }))}
         >
           Reset date
         </button>
@@ -85,8 +90,8 @@ const NewsAggregator = () => {
         onClick={() =>
           addPreference({
             source: filters.source,
-            starredAuthors,
             category: filters.category,
+            starredAuthors: [],
           })
         }
       >
@@ -110,14 +115,54 @@ const NewsAggregator = () => {
 
       {/* Articles List */}
       <ul>
-        {filteredArticles.map((article, index) => (
-          <li key={index}>
-            <a href={article.url} target="_blank" rel="noopener noreferrer">
-              {article.title}
-            </a>{" "}
-            - <em>{article.source}</em>
-          </li>
-        ))}
+        {filteredArticles.map((article, index) => {
+          const activePreference = preferences.find(
+            (pref) =>
+              pref.source === filters.source &&
+              pref.category === filters.category
+          );
+
+          const isAuthorStarred =
+            activePreference?.starredAuthors.includes(article.authors[0]);
+
+          return (
+            <li key={index}>
+              <a href={article.url} target="_blank" rel="noopener noreferrer">
+                {article.title}
+              </a>{" "}
+              - <em>{article.source}</em> -{" "}
+              <em>
+                {article.authors.map((author, i) => (
+                  <span key={i}>
+                    {author}{" "}
+                    <button
+                      onClick={() => {
+                        if (isAuthorStarred) {
+                          removeAuthorFromPreference(
+                            author,
+                            filters.source,
+                            filters.category
+                          );
+                        } else {
+                          addPreference({
+                            source: filters.source,
+                            category: filters.category,
+                            starredAuthors: [
+                              ...(activePreference?.starredAuthors || []),
+                              author,
+                            ],
+                          });
+                        }
+                      }}
+                    >
+                      {isAuthorStarred ? "Unstar" : "Star"}
+                    </button>
+                  </span>
+                ))}
+              </em>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
