@@ -1,165 +1,155 @@
-/* Container and general styles */
-.news-container {
+/* Wrapper */
+.news-wrapper {
     display: flex;
-    justify-content: space-between;
+    flex-direction: row;
     gap: 1rem;
     padding: 1rem;
     max-width: 1000px;
     margin: 0 auto;
     font-family: "Roboto", sans-serif;
-}
-
-.news-title {
-    text-align: center;
-    color: #333;
-    font-size: 1.8rem;
-    margin-bottom: 1rem;
-}
-
-/* Search Input */
-.news-search-input {
-    width: 100%;
-    padding: 0.5rem;
-    margin-bottom: 1rem;
-    font-size: 1rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-/* Filters Section */
-.news-filters {
-    display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 1.5rem;
-}
-
-.news-filter-select,
-.news-filter-date {
-    flex: 1;
-    padding: 0.5rem;
-    font-size: 1rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-.news-reset-button {
-    padding: 0.5rem 1rem;
-    background-color: #f44336;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: background-color 0.3s ease;
-}
-
-.news-reset-button:hover {
-    background-color: #d32f2f;
-}
-
-/* Add Preference Button */
-.news-add-preference-button {
-    padding: 0.5rem 1rem;
-    background-color: #4caf50;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: background-color 0.3s ease;
-}
-
-.news-add-preference-button:hover {
-    background-color: #388e3c;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-/* Preferences Section */
-.news-preferences-container {
-    min-width: 300px;
-}
-.news-preferences-list {
-    padding: 0;
-    margin: 0 0 1.5rem;
+  }
+  
+  /* Preferences Section */
+  .news-preferences-container {
+    width: 300px;
+    flex: 0 0 300px;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+    order: 1; /* Left side */
+  }
+  
+  .news-preferences-container.collapsed {
+    max-height: 0; /* Collapsed state */
+  }
+  
+  .news-preferences-list {
     list-style: none;
-}
-
-.news-preference-item {
-    text-align: left;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .news-preference-item {
+    padding: 1rem;
     background-color: #f9f9f9;
     border: 1px solid #ddd;
     border-radius: 8px;
-    padding: 1rem;
     margin-bottom: 1rem;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.news-preference-item:hover {
+  }
+  
+  .news-preference-item:hover {
     transform: translateY(-4px);
     box-shadow: 0 8px 12px rgba(0, 0, 0, 0.1);
-}
-
-.news-preference-item h3 {
+  }
+  
+  .news-preference-item h3 {
     margin: 0 0 0.5rem;
     font-size: 1.2rem;
     color: #333;
-}
-
-.news-preference-item p {
-    margin: 0.2rem 0;
-    color: #555;
-}
-
-.news-preference-item span {
-    font-weight: bold;
-    color: #2196f3;
-}
-
-/* Loading/Error Messages */
-.news-loading-text,
-.news-error-text {
-    text-align: center;
-    color: #f44336;
-    font-weight: bold;
-    margin: 1rem 0;
-}
-
-/* Articles Section */
-.news-articles-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.news-article-item {
-    padding: 1rem;
-    border-bottom: 1px solid #ccc;
-}
-
-.news-article-link {
-    color: #2196f3;
-    text-decoration: none;
-    font-weight: bold;
-}
-
-.news-article-link:hover {
-    text-decoration: underline;
-}
-
-.news-star-button {
-    margin-left: 0.5rem;
-    padding: 0.2rem 0.5rem;
-    background-color: #ff9800;
+  }
+  
+  /* Collapsible Button */
+  .news-collapse-button {
+    padding: 0.5rem 1rem;
+    background-color: #2196f3;
     color: #fff;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 0.8rem;
+    font-size: 1rem;
     transition: background-color 0.3s ease;
-}
-
-.news-star-button:hover {
-    background-color: #e65100;
-}
+    margin-bottom: 1rem;
+  }
+  
+  .news-collapse-button:hover {
+    background-color: #1976d2;
+  }
+  
+  /* Main Content Section */
+  .news-content-container {
+    flex: 1;
+    padding: 1rem;
+  }
+  
+  .news-title {
+    font-size: 1.8rem;
+    color: #333;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  
+  .news-search-input,
+  .news-filter-select,
+  .news-filter-date {
+    width: 100%;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+  
+  .news-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .news-reset-button,
+  .news-add-preference-button {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    background-color: #f44336;
+    color: white;
+    cursor: pointer;
+  }
+  
+  .news-add-preference-button {
+    background-color: #4caf50;
+  }
+  
+  .news-add-preference-button:hover {
+    background-color: #388e3c;
+  }
+  
+  .news-articles-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .news-article-item {
+    margin: 1rem 0;
+  }
+  
+  .news-article-link {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #2196f3;
+    text-decoration: none;
+  }
+  
+  .news-article-link:hover {
+    text-decoration: underline;
+  }
+  
+  .news-star-button {
+    background-color: #ff9800;
+    border: none;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-left: 0.5rem;
+  }
+  
+  .news-loading-text,
+  .news-error-text {
+    text-align: center;
+    font-size: 1.1rem;
+    color: #888;
+  }
+  

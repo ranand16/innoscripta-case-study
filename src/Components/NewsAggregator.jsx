@@ -9,11 +9,12 @@ import {
   NEW_YORK_TIMES,
 } from "../Utils/constants";
 import { useFavoritesStore } from "../Hooks/useFavoritesStore";
-import "../NewAggregator.css"
+import "../NewAggregator.css";
 
 const NewsAggregator = () => {
   const [keyword, setKeyword] = useState("");
   const [filters, setFilters] = useState(FILTER_INIT);
+  const [collapsed, setCollapsed] = useState(false); // State for collapsing preferences
   const debouncedKeyword = useDebounce(keyword, 1000);
 
   const { articles, loading, error } = useFetchArticles(debouncedKeyword);
@@ -32,30 +33,34 @@ const NewsAggregator = () => {
   }, [articles, filters]);
 
   return (
-    <div className="news-container">
-      <div className="news-preferences-container">
-        <ul className="news-preferences-list">
-          {preferences.map((pref, index) => (
-            <li key={index} className="news-preference-item">
-              <h3>Preference {index + 1}</h3>
-              <p>
-                <span>Source:</span> {pref.source || "All"}
-              </p>
-              <p>
-                <span>Category:</span> {pref.category || "All"}
-              </p>
-              <p>
-                <span>Starred Authors:</span>{" "}
-                {pref.starredAuthors.join(", ") || "None"}
-              </p>
-            </li>
-          ))}
-        </ul>
+    <div className="news-wrapper">
+      {/* Preferences Section (Left) */}
+      <div className={`news-preferences-container ${collapsed ? "collapsed" : ""}`}>
 
+        {!collapsed && (
+          <ul className="news-preferences-list">
+            {preferences.map((pref, index) => (
+              <li key={index} className="news-preference-item">
+                <h3>Preference {index + 1}</h3>
+                <p>
+                  <span>Source:</span> {pref.source || "All"}
+                </p>
+                <p>
+                  <span>Category:</span> {pref.category || "All"}
+                </p>
+                <p>
+                  <span>Starred Authors:</span>{" "}
+                  {pref.starredAuthors.join(", ") || "None"}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
-      <div>
-        <h1 className="news-title">News Aggregator</h1>
+      {/* Actual News Section (Right) */}
+      <div className="news-content-container">
+        <h1 className="news-title">News Aggregator</h1> 
         <input
           type="text"
           placeholder="Search articles..."
@@ -116,17 +121,21 @@ const NewsAggregator = () => {
 
         <button
           className="news-add-preference-button"
-          onClick={() =>
-            addPreference({
-              source: filters.source,
-              category: filters.category,
-              starredAuthors: [],
-            })
-          }
+          onClick={() => addPreference({
+                  source: filters.source,
+                  category: filters.category,
+                  starredAuthors: [],
+              })}
         >
           Add Preference
         </button>
-
+        {" "}
+        {preferences.length > 0 && <button
+          className="news-collapse-button"
+          onClick={() => setCollapsed((prev) => !prev)}
+        >
+          {collapsed ? "Show Preferences" : "Hide Preferences"}
+        </button>}
 
         {loading && <p className="news-loading-text">Loading articles...</p>}
         {error && (
